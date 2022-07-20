@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from '../../node_modules/axios/index';
+import usePromise from '../lib/usePromise';
 import NewsItem from './NewsItem';
 
 const NewsListBlock = styled.div`
@@ -23,33 +24,49 @@ margin-top: 2rem;
 // }
 const NewsList = ({category}) => {
 
-  const [articles, setArticles] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // const [articles, setArticles] = useState(null);
+  // const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const query = category === 'all' ? '' : `&category=${category}`
-        const response = await axios.get(
-          `https://newsapi.org/v2/top-headlines?country=kr${query}&apiKey=572aa9bfddc34db5a818bbaf0c648edb`
-        )
-        setArticles(response.data.articles)
-      } catch(e) {
-        console.log(e)
-      }
-      setLoading(false)
-    }
-    fetchData()
-  }, [category]);
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true)
+  //     try {
+  //       const query = category === 'all' ? '' : `&category=${category}`
+  //       const response = await axios.get(
+  //         `https://newsapi.org/v2/top-headlines?country=kr${query}&apiKey=572aa9bfddc34db5a818bbaf0c648edb`
+  //       )
+  //       setArticles(response.data.articles)
+  //     } catch(e) {
+  //       console.log(e)
+  //     }
+  //     setLoading(false)
+  //   }
+  //   fetchData()
+  // }, [category]);
+
+  // if (loading) {
+  //   return <NewsListBlock>대기 중...</NewsListBlock>
+  // }
+  // if (!articles) {
+  //   return null;
+  // }
+
+  const [loading, response, error] = usePromise(() => {
+    const query = category === 'all' ? '' : `&category=${category}`
+    return axios.get(`https://newsapi.org/v2/top-headlines?country=kr${query}&apiKey=572aa9bfddc34db5a818bbaf0c648edb`)
+  }, [category])
 
   if (loading) {
     return <NewsListBlock>대기 중...</NewsListBlock>
   }
-  if (!articles) {
-    return null;
+  if (!response) {
+    return null
+  }
+  if(error) {
+    return <NewsListBlock>에러 발생!</NewsListBlock>
   }
 
+  const {articles} = response.data;
   return (
     <NewsListBlock>
       {articles.map(article => {
